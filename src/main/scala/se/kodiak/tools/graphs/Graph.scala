@@ -6,7 +6,6 @@ import se.kodiak.tools.graphs.mutable.{MutableSerialGraph, MutableGraph}
 
 import scala.collection.parallel.ParSeq
 
-// TODO add cypher inspired implicit explicits to Node & Relation
 // TODO add callbacks for new & removed edges when Mutators are called. Perhaps in 2 flavours, one with callbacks and one with a simple save...
 // TODO turn Node and Relation into traits.
 // TODO have a look at how to make graphs lazyloaded.
