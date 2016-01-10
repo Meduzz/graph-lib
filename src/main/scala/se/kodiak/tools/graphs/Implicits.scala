@@ -40,11 +40,18 @@ trait GraphNodeDSL {
   // create/remove relationships
   def link(relation: Relation, end:Node)(implicit graph:Graph with Mutators):Unit = graph.add(node, relation, end)
   def link(rel:Relationship, end:Node)(implicit graph:Graph with Mutators):Unit = graph.add(node, graph.relation(rel), end)
+
+  // load node data
+  def data(implicit graph:Graph with Mutators):Any = graph.loadNode(node.id).data
 }
 
 trait GraphRelationDSL {
 
   def relation:Relation
 
+  // remove the edge bound by this relation.
   def remove(implicit graph:Graph with Mutators):Unit = graph.remove(relation)
+
+  // load relation data.
+  def data(implicit graph:Graph with Mutators):Any = graph.loadRelation(relation.id).data
 }
