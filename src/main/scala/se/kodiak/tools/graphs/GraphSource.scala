@@ -18,5 +18,14 @@ trait GraphSource {
     */
   def remove(relation:Relation):Unit
 
+  def relation(rel:Relationship):Relation
+  def relation(rel:Relationship, data:Any):DataRelation
+
+  def node():Node
+  def node(data:Any):DataNode
+
+  def loadNode(id:VerticeId):DataNode
+  def loadRelation(id:RelationId):DataRelation
+
   def edges:Seq[Edge]
 }

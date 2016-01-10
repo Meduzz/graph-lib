@@ -39,6 +39,7 @@ trait GraphNodeDSL {
 
   // create/remove relationships
   def link(relation: Relation, end:Node)(implicit graph:Graph with Mutators):Unit = graph.add(node, relation, end)
+  def link(rel:Relationship, end:Node)(implicit graph:Graph with Mutators):Unit = graph.add(node, graph.relation(rel), end)
 }
 
 trait GraphRelationDSL {

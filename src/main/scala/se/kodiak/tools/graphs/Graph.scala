@@ -91,7 +91,7 @@ trait Graph {
   def relation(start:Node, end:Node, rel:Relationship, direction:Direction):Seq[Relation]
 }
 
-private class GraphImpl(source:GraphSource) extends Graph with Mutators {
+private class GraphImpl(val source:GraphSource) extends Graph with Mutators {
 
   private def start(vertice:Node, data:Seq[Edge] = source.edges):Seq[Edge] = {
     data.filter(_.start.id.equals(vertice.id))
@@ -198,8 +198,4 @@ private class GraphImpl(source:GraphSource) extends Graph with Mutators {
 
     resultingEdges.map(_.relation).seq
   }
-
-  override def add(start: Node, relation: Relation, end: Node): Unit = source.add(start, relation, end)
-
-  override def remove(relation: Relation): Unit = source.remove(relation)
 }
