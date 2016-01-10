@@ -1,38 +1,10 @@
 package se.kodiak.tools.graphs
 
-import se.kodiak.tools.graphs.immutable.{ImmutableGraph, ImmutableSerialGraph}
 import se.kodiak.tools.graphs.model._
-import se.kodiak.tools.graphs.mutable.{MutableSerialGraph, MutableGraph}
-
-import scala.collection.parallel.ParSeq
-
-// TODO add callbacks for new & removed edges when Mutators are called. Perhaps in 2 flavours, one with callbacks and one with a simple save...
-// TODO turn Node and Relation into traits.
-// TODO have a look at how to make graphs lazyloaded.
+import scala.collection.immutable._
 
 object Graph {
-  def immutable(edges:Seq[Edge]):Graph = new ImmutableGraph(edges.par)
-  def immutableSerial(edges:Seq[Edge]):Graph = new ImmutableSerialGraph(edges)
-  def mutable(edges:Seq[Edge]):Graph with Mutators = new MutableGraph(edges.par)
-  def mutableSerial(edges:Seq[Edge]):Graph with Mutators = new MutableSerialGraph(edges)
-
-  def build(start:Map[VerticeId, List[RelationId]], end:Map[RelationId, VerticeId], relTypes:Map[RelationId, Relationship]):Seq[Edge] = {
-    start.flatMap { pair =>
-      val startNode = Node(pair._1)
-      pair._2.map { relId =>
-        val relation = Relation(relId, relTypes(relId))
-        val endNode = Node(end(relId))
-
-        Edge(startNode, relation, endNode)
-      }
-    }.toSeq
-  }
-
-  def build(data:Seq[(VerticeId, RelationId, Relationship, VerticeId)]):Seq[Edge] = {
-    data.map { tuple =>
-      Edge(Node(tuple._1), Relation(tuple._2, tuple._3), Node(tuple._4))
-    }
-  }
+  def apply(source:GraphSource):Graph with Mutators = new GraphImpl(source)
 }
 
 trait Graph {
@@ -69,6 +41,14 @@ trait Graph {
   def outbound(vertice:Node, rel:Relationship):Seq[Node]
 
   /**
+    * Get all outbound relation + vertice that match the relationship filter.
+    * @param vertice the source vertice.
+    * @param rel the relationship filter.
+    * @return returns a collection of relation, end vertice pairs.
+    */
+  def outboundWithRelation(vertice:Node, rel:Relationship):Seq[(Relation, Node)]
+
+  /**
    * Get all source vertices and relations of this end vertice.
    * @param vertice the end vertice.
    * @return a collection of tuples of the source vertice and the relation.
@@ -82,6 +62,14 @@ trait Graph {
    * @return returns a collection of the source vertices.
    */
   def inbound(vertice:Node, rel:Relationship):Seq[Node]
+
+  /**
+    * Get all inbound relation + vertice that match a relationship filter.
+    * @param vertice the end vertice.
+    * @param rel the relationship filter.
+    * @return returns a collection of start vectice + relation pairs.
+    */
+  def inboundWithRelation(vertice:Node, rel:Relationship):Seq[(Node, Relation)]
 
   /**
    * Find all relations connecting these vertices specified by direction.
@@ -103,110 +91,13 @@ trait Graph {
   def relation(start:Node, end:Node, rel:Relationship, direction:Direction):Seq[Relation]
 }
 
-trait SerialGraph extends Graph {
+private class GraphImpl(source:GraphSource) extends Graph with Mutators {
 
-  protected def edges:Seq[Edge]
-
-  private def start(vertice:Node, data:Seq[Edge] = edges):Seq[Edge] = {
+  private def start(vertice:Node, data:Seq[Edge] = source.edges):Seq[Edge] = {
     data.filter(_.start.id.equals(vertice.id))
   }
 
-  private def end(vertice:Node, data:Seq[Edge] = edges):Seq[Edge] = {
-    data.filter(_.end.id.equals(vertice.id))
-  }
-
-  override def degrees(vertice: Node, direction:Direction): Int = {
-    val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(vertice)
-        val in = end(vertice)
-        out.union(in)
-      }
-      case Direction.OUTBOUND => start(vertice)
-      case Direction.INBOUND => end(vertice)
-    }
-
-    resultingEdges.size
-  }
-
-  override def inbound(vertice: Node): Seq[(Node, Relation)] = {
-    end(vertice)
-      .map { edge =>
-        (edge.start, edge.relation)
-      }
-  }
-
-  override def inbound(vertice: Node, rel: Relationship): Seq[Node] = {
-    end(vertice)
-      .filter(_.relation.relType.equals(rel))
-      .map(_.start)
-  }
-
-  override def outbound(vertice: Node): Seq[(Relation, Node)] = {
-    start(vertice)
-      .map { edge =>
-        (edge.relation, edge.end)
-      }
-  }
-
-  override def outbound(vertice: Node, rel: Relationship): Seq[Node] = {
-    start(vertice)
-      .filter(_.relation.relType.equals(rel))
-      .map(_.end)
-  }
-
-  override def relation(startNode: Node, endNode: Node, rel: Relationship, direction:Direction): Seq[Relation] = {
-    val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(startNode).filter(_.relation.relType.equals(rel))
-        val in = end(endNode).filter(_.relation.relType.equals(rel))
-        out.intersect(in)
-      }
-      case Direction.OUTBOUND => start(startNode, end(endNode)).filter(_.relation.relType.equals(rel))
-      case Direction.INBOUND => end(endNode, start(startNode)).filter(_.relation.relType.equals(rel))
-    }
-
-    resultingEdges.map(_.relation)
-  }
-
-  override def degrees(vertice: Node, rel: Relationship, direction:Direction): Int = {
-    val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(vertice).filter(_.relation.relType.equals(rel))
-        val in = end(vertice).filter(_.relation.relType.equals(rel))
-        out.union(in)
-      }
-      case Direction.OUTBOUND => start(vertice).filter(_.relation.relType.equals(rel))
-      case Direction.INBOUND => end(vertice).filter(_.relation.relType.equals(rel))
-    }
-
-    resultingEdges.count(_.relation.relType.equals(rel))
-  }
-
-  override def relation(startNode: Node, endNode: Node, direction:Direction): Seq[Relation] = {
-    val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(startNode)
-        val in = end(endNode)
-        out.intersect(in)
-      }
-      case Direction.OUTBOUND => start(startNode, end(endNode))
-      case Direction.INBOUND => end(endNode, start(startNode))
-    }
-
-    resultingEdges.map(_.relation)
-  }
-}
-
-trait ParallellGraph extends Graph {
-
-  protected def edges:ParSeq[Edge]
-
-  private def start(vertice:Node, data:ParSeq[Edge] = edges):ParSeq[Edge] = {
-    data.filter(_.start.id.equals(vertice.id))
-  }
-
-  private def end(vertice:Node, data:ParSeq[Edge] = edges):ParSeq[Edge] = {
+  private def end(vertice:Node, data:Seq[Edge] = source.edges):Seq[Edge] = {
     data.filter(_.end.id.equals(vertice.id))
   }
 
@@ -238,6 +129,13 @@ trait ParallellGraph extends Graph {
       .seq
   }
 
+  override def inboundWithRelation(vertice: Node, rel: Relationship): Seq[(Node, Relation)] = {
+    end(vertice)
+      .filter(_.relation.relType.equals(rel))
+      .map(edge => (edge.start, edge.relation))
+      .seq
+  }
+
   override def outbound(vertice: Node): Seq[(Relation, Node)] = {
     start(vertice)
       .map { edge =>
@@ -252,15 +150,22 @@ trait ParallellGraph extends Graph {
       .seq
   }
 
-  override def relation(startNode: Node, endNode: Node, rel: Relationship, direction:Direction): Seq[Relation] = {
+  override def outboundWithRelation(vertice: Node, rel: Relationship): Seq[(Relation, Node)] = {
+    start(vertice)
+      .filter(_.relation.relType.equals(rel))
+      .map(edge => (edge.relation, edge.end))
+      .seq
+  }
+
+  override def relation(node1: Node, node2: Node, rel: Relationship, direction:Direction): Seq[Relation] = {
     val resultingEdges = direction match {
       case Direction.BOTH => {
-        val out = start(startNode).filter(_.relation.relType.equals(rel))
-        val in = end(endNode).filter(_.relation.relType.equals(rel))
+        val out = start(node1).filter(_.relation.relType.equals(rel))
+        val in = end(node2).filter(_.relation.relType.equals(rel))
         out.union(in)
       }
-      case Direction.OUTBOUND => start(startNode, end(endNode)).filter(_.relation.relType.equals(rel))
-      case Direction.INBOUND => end(endNode, start(startNode)).filter(_.relation.relType.equals(rel))
+      case Direction.OUTBOUND => start(node1, end(node2)).filter(_.relation.relType.equals(rel))
+      case Direction.INBOUND => end(node1, start(node2)).filter(_.relation.relType.equals(rel))
     }
 
     resultingEdges.map(_.relation).seq
@@ -280,27 +185,21 @@ trait ParallellGraph extends Graph {
     resultingEdges.size
   }
 
-  override def relation(startNode: Node, endNode: Node, direction:Direction): Seq[Relation] = {
+  override def relation(node1: Node, node2: Node, direction:Direction): Seq[Relation] = {
     val resultingEdges = direction match {
       case Direction.BOTH => {
-        val out = start(startNode)
-        val in = end(endNode)
+        val out = start(node1)
+        val in = end(node2)
         out.intersect(in)
       }
-      case Direction.OUTBOUND => start(startNode, end(endNode))
-      case Direction.INBOUND => end(endNode, start(startNode))
+      case Direction.OUTBOUND => start(node1, end(node2))
+      case Direction.INBOUND => end(node1, start(node2))
     }
 
-    resultingEdges.map(_.relation)
-      .seq
+    resultingEdges.map(_.relation).seq
   }
-}
 
-trait Mutators {
-  def add(edge:Edge):Unit
-  def add(start:Node, relation: Relation, end:Node):Unit
-  def remove(edge:Edge):Unit
-  def remove(vertice:Node):Unit
-  def remove(relation: Relation):Unit
-  def remove(rel:Relationship):Unit
+  override def add(start: Node, relation: Relation, end: Node): Unit = source.add(start, relation, end)
+
+  override def remove(relation: Relation): Unit = source.remove(relation)
 }
