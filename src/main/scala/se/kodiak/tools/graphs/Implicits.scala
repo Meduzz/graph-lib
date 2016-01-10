@@ -41,7 +41,7 @@ trait GraphNodeDSL {
    */
   def <--(implicit graph:Graph):Seq[(Node, Relation)] = graph.inbound(node)
   def oubound(implicit graph:Graph):Seq[(Relation, Node)] = graph.outbound(node)
-  def inboun(implicit graph:Graph):Seq[(Node, Relation)] = graph.inbound(node)
+  def inbound(implicit graph:Graph):Seq[(Node, Relation)] = graph.inbound(node)
 
   // degrees
   def `-o-`(implicit graph:Graph):Int = graph.degrees(node, Direction.BOTH)
