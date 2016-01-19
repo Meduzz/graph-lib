@@ -21,10 +21,10 @@ trait Mutators {
   def remove(relation: Relation):Unit = source.remove(relation)
 
   def relation(rel:Relationship):Relation = source.relation(rel)
-  def relation(rel:Relationship, data:Any):DataRelation = source.relation(rel, data)
+  def relation(rel: Relationship, data: String):DataRelation = source.relation(rel, data)
 
   def node():Node = source.node()
-  def node(data:Any):DataNode = source.node(data)
+  def node(data: String):DataNode = source.node(data)
 
   def loadNode(id:VerticeId):DataNode = source.loadNode(id)
   def loadRelation(id:RelationId):DataRelation = source.loadRelation(id)

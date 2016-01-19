@@ -7,7 +7,7 @@ package object model {
     def id:VerticeId
   }
   case class LazyNode(id:VerticeId) extends Node
-  case class DataNode(id:VerticeId, data:Any) extends Node
+  case class DataNode(id:VerticeId, data:String) extends Node
   object Node {
     def apply(id:VerticeId):Node = LazyNode(id)
   }
@@ -17,7 +17,7 @@ package object model {
     def relType: Relationship
   }
   case class LazyRelation(id:RelationId, relType:Relationship) extends Relation
-  case class DataRelation(id:RelationId, relType:Relationship, data:Any) extends Relation
+  case class DataRelation(id:RelationId, relType:Relationship, data:String) extends Relation
   object Relation {
     def apply(id:RelationId, relType:Relationship):Relation = LazyRelation(id, relType)
   }

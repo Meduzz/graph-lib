@@ -2,7 +2,7 @@ package se.kodiak.tools.graphs
 
 import org.scalatest.FunSuite
 import model._
-import se.kodiak.tools.graphs.graphsources.InMemoryGraphSource$
+import se.kodiak.tools.graphs.graphsources.InMemoryGraphSource
 
 class GraphTest extends FunSuite {
 

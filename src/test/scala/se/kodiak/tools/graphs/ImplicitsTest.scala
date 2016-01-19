@@ -1,7 +1,7 @@
 package se.kodiak.tools.graphs
 
 import org.scalatest.FunSuite
-import se.kodiak.tools.graphs.graphsources.InMemoryGraphSource$
+import se.kodiak.tools.graphs.graphsources.InMemoryGraphSource
 import se.kodiak.tools.graphs.model._
 import Implicits._
 

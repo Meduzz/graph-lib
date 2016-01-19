@@ -29,9 +29,9 @@ class InMemoryGraphSource(var edges:Seq[Edge], nodeCount:Long, relationCount:Lon
 
   override def node(): Node = Node(nodeId.incrementAndGet())
 
-  override def node(data: Any): DataNode = DataNode(nodeId.incrementAndGet(), data)
+  override def node(data: String): DataNode = DataNode(nodeId.incrementAndGet(), data)
 
-  override def relation(rel: Relationship, data: Any): DataRelation = DataRelation(relationId.incrementAndGet(), rel, data)
+  override def relation(rel: Relationship, data: String): DataRelation = DataRelation(relationId.incrementAndGet(), rel, data)
 
   override def loadRelation(id: RelationId): DataRelation = throw new RuntimeException("Not implemented.")
 

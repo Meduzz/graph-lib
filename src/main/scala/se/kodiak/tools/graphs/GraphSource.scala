@@ -19,10 +19,10 @@ trait GraphSource {
   def remove(relation:Relation):Unit
 
   def relation(rel:Relationship):Relation
-  def relation(rel:Relationship, data:Any):DataRelation
+  def relation(rel: Relationship, data: String):DataRelation
 
   def node():Node
-  def node(data:Any):DataNode
+  def node(data: String):DataNode
 
   def loadNode(id:VerticeId):DataNode
   def loadRelation(id:RelationId):DataRelation
