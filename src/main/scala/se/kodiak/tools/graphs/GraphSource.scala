@@ -6,6 +6,7 @@ import model._
 trait GraphSource {
   /**
     * Creates a new edge and adds it to the internal source.
+ *
     * @param start the start vertice
     * @param relation the relation
     * @param end the end vertice.
@@ -14,18 +15,27 @@ trait GraphSource {
 
   /**
     * Remove the Edge bound by this this relation.
+ *
     * @param relation the relation
     */
   def remove(relation:Relation):Unit
 
   def relation(rel:Relationship):Relation
-  def relation(rel: Relationship, data: String):DataRelation
+  def relation(rel:Relationship, data: String):DataRelation
+  def relation(rel:Relationship, data:Map[String, String]):HashRelation
+  def relationSeq(rel:Relationship):Relation
 
   def node():Node
   def node(data: String):DataNode
+  def node(data:Map[String, String]):HashNode
+  def nodeSeq():Node
 
-  def loadNode(id:VerticeId):DataNode
-  def loadRelation(id:RelationId):DataRelation
+  def loadDataNode(id:VerticeId):DataNode
+  def loadHashNode(id:VerticeId):HashNode
+  def loadSeqNode(id:VerticeId):ListNode
+  def loadDataRelation(id:RelationId):DataRelation
+  def loadHashRelation(id:RelationId):HashRelation
+  def loadSeqRelation(id:RelationId):ListRelation
 
   def edges:Seq[Edge]
 }

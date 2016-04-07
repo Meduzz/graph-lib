@@ -7,6 +7,7 @@ import redis.RedisClient
 import se.kodiak.tools.graphs.model._
 import se.kodiak.tools.graphs.{Mutators, Graph}
 import se.kodiak.tools.graphs.Implicits._
+import scala.collection.immutable._
 
 class RedisGraphSourceTest extends FunSuite with BeforeAndAfterAll with KeyBuilder with ScalaFutures {
   implicit val system = ActorSystem("graph-lib-test")
@@ -100,6 +101,41 @@ class RedisGraphSourceTest extends FunSuite with BeforeAndAfterAll with KeyBuild
       assert(someRel.isDefined)
       val rel = someRel.get
       assert(rel equals "HATES", "Relation did not match HATES.")
+    }
+  }
+
+  test("nodes and relations got types...ish") {
+    val start = source.node(Map("key" -> "value"))
+    val end = source.nodeSeq()
+    val relation = source.relationSeq("REL")
+
+    redis.sadd(nodeKey(end.id), "key", "value")
+    val endData = source.loadSeqNode(end.id)
+    redis.sadd(relationDataKey(relation.id), "key", "value")
+    val relationData = source.loadSeqRelation(relation.id)
+
+    assert(endData.data.size == 2)
+    assert(endData.data.contains("key"))
+    assert(endData.data.contains("value"))
+
+    assert(relationData.data.size == 2)
+    assert(relationData.data.contains("key"))
+    assert(relationData.data.contains("value"))
+
+    whenReady(redis.hgetall[String](nodeKey(start.id))) { map =>
+      assert(map("key").equals("value"))
+    }
+
+    whenReady(redis.smembers[String](nodeKey(end.id))) { seq =>
+      assert(seq.size == 2)
+      assert(seq.contains("key"))
+      assert(seq.contains("value"))
+    }
+
+    whenReady(redis.smembers[String](relationDataKey(relation.id))) { str =>
+      assert(str.size == 2)
+      assert(str.contains("key"))
+      assert(str.contains("value"))
     }
   }
 
