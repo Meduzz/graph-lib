@@ -26,6 +26,11 @@ trait Mutators {
   def node():Node = source.node()
   def node(data: String):DataNode = source.node(data)
 
-  def loadNode(id:VerticeId):DataNode = source.loadDataNode(id)
-  def loadRelation(id:RelationId):DataRelation = source.loadDataRelation(id)
+  def loadDataNode(id:VerticeId):DataNode = source.loadDataNode(id)
+  def loadHashNode(id:VerticeId):HashNode = source.loadHashNode(id)
+  def loadListNode(id:VerticeId):ListNode = source.loadSeqNode(id)
+
+  def loadDataRelation(id:RelationId):DataRelation = source.loadDataRelation(id)
+  def loadHashRelation(id:RelationId):HashRelation = source.loadHashRelation(id)
+  def loadListRelation(id:RelationId):ListRelation = source.loadSeqRelation(id)
 }

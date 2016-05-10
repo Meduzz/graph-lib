@@ -42,7 +42,9 @@ trait GraphNodeDSL {
   def link(rel:Relationship, end:Node)(implicit graph:Graph with Mutators):Unit = graph.add(node, graph.relation(rel), end)
 
   // load node data
-  def data(implicit graph:Graph with Mutators):Any = graph.loadNode(node.id).data
+  def asData(implicit graph:Graph with Mutators):DataNode = graph.loadDataNode(node.id)
+  def asSeq(implicit graph:Graph with Mutators):ListNode = graph.loadListNode(node.id)
+	def asHash(implicit graph:Graph with Mutators):HashNode = graph.loadHashNode(node.id)
 }
 
 trait GraphRelationDSL {
@@ -53,5 +55,7 @@ trait GraphRelationDSL {
   def remove(implicit graph:Graph with Mutators):Unit = graph.remove(relation)
 
   // load relation data.
-  def data(implicit graph:Graph with Mutators):Any = graph.loadRelation(relation.id).data
+  def asData(implicit graph:Graph with Mutators):DataRelation = graph.loadDataRelation(relation.id)
+	def asSeq(implicit graph:Graph with Mutators):ListRelation = graph.loadListRelation(relation.id)
+	def asHash(implicit graph:Graph with Mutators):HashRelation = graph.loadHashRelation(relation.id)
 }
