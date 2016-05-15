@@ -5,25 +5,27 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import redis.RedisClient
 import se.kodiak.tools.graphs.model._
-import se.kodiak.tools.graphs.{Mutators, Graph}
+import se.kodiak.tools.graphs.{Graph, Mutators}
 import se.kodiak.tools.graphs.Implicits._
+import se.kodiak.tools.graphs.graphsources.Redis.RedisGraphBuilder
+
 import scala.collection.immutable._
 
 class RedisGraphSourceTest extends FunSuite with BeforeAndAfterAll with KeyBuilder with ScalaFutures {
   implicit val system = ActorSystem("graph-lib-test")
-  val redis = RedisClient()
-  val graphName = "test"
-  val source = RedisGraphSource(redis, graphName)
-  implicit val graph:Graph with Mutators = Graph(source)
+  implicit val redis = RedisClient()
 
-  val nodeIndex:String = "se.kodiak.tools.graphs.node"
-  val relationIndex:String = "se.kodiak.tools.graphs.relation"
-  val indexIndex:String = "se.kodiak.tools.graphs.index"
+  val graphName = "test"
+	val nodeIndex:String = "node"
+	val relationIndex:String = "relation"
+	val indexIndex:String = "index"
+
+  implicit val graph:Graph with Mutators = RedisGraphBuilder.forGraph(graphName).withNodePrefix(nodeIndex).withRelationPrefix(relationIndex).build()
 
   test("nodes and relations should be stored properly") {
-    val start = source.node()
-    val end = source.node()
-    val relation = source.relation("KNOWS")
+    val start = graph.node()
+    val end = graph.node()
+    val relation = graph.relation("KNOWS")
 
     start.link(relation, end)
 
@@ -61,7 +63,7 @@ class RedisGraphSourceTest extends FunSuite with BeforeAndAfterAll with KeyBuild
   test("edges come and go, nodes remain") {
     val start = Node(1L)
     val end = Node(2L)
-    start.findRelationsToNode(end, Direction.OUTBOUND).head.remove
+    start.findRelationsToNode(end, Direction.OUTBOUND).head.delete
 
     whenReady(redis.get[String](nodeKey(start.id))) { someNode =>
       assert(someNode.isDefined)
@@ -105,14 +107,13 @@ class RedisGraphSourceTest extends FunSuite with BeforeAndAfterAll with KeyBuild
   }
 
   test("nodes and relations got types...ish") {
-    val start = source.node(Map("key" -> "value"))
-    val end = source.nodeSeq()
-    val relation = source.relationSeq("REL")
+    val start = graph.node(Map("key" -> "value"))
+    val end = graph.node(Seq("key", "value"))
+    val relation = graph.relation("REL", Seq("key", "value"))
 
-    redis.sadd(nodeKey(end.id), "key", "value")
-    val endData = source.loadSeqNode(end.id)
-    redis.sadd(relationDataKey(relation.id), "key", "value")
-    val relationData = source.loadSeqRelation(relation.id)
+		val startData = graph.loadHashNode(start.id)
+    val endData = graph.loadListNode(end.id)
+    val relationData = graph.loadListRelation(relation.id)
 
     assert(endData.data.size == 2)
     assert(endData.data.contains("key"))
@@ -122,22 +123,8 @@ class RedisGraphSourceTest extends FunSuite with BeforeAndAfterAll with KeyBuild
     assert(relationData.data.contains("key"))
     assert(relationData.data.contains("value"))
 
-    whenReady(redis.hgetall[String](nodeKey(start.id))) { map =>
-      assert(map("key").equals("value"))
-    }
-
-    whenReady(redis.smembers[String](nodeKey(end.id))) { seq =>
-      assert(seq.size == 2)
-      assert(seq.contains("key"))
-      assert(seq.contains("value"))
-    }
-
-    whenReady(redis.smembers[String](relationDataKey(relation.id))) { str =>
-      assert(str.size == 2)
-      assert(str.contains("key"))
-      assert(str.contains("value"))
-    }
-  }
+		assert(startData.data("key").equals("value"))
+	}
 
   override protected def afterAll(): Unit = {
     redis.flushall()

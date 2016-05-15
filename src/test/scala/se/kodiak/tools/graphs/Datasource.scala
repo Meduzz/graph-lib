@@ -41,6 +41,9 @@ object Datasource {
   def tupled():Seq[(VerticeId, RelationId, Relationship, VerticeId)] = edges
   def prebuilt():Seq[Edge] = result
 
+  def nodes():Seq[Node] = Seq(person1, person2, person3, gadget1, gadget2)
+	def relations():Seq[Relation] = Seq(knows1, knows2, knows3, knows4, owns1, owns2)
+
   val nodeIndex = 5L
   val relationIndex = 6L
 }

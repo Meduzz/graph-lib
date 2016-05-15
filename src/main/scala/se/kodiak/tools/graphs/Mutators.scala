@@ -4,33 +4,28 @@ import se.kodiak.tools.graphs.model._
 
 trait Mutators {
 
-  def source:GraphSource
+  def edgeDelegate:EdgeDelegate
+	def nodeDelegate:NodeDelegate
+	def relationDelegate:RelationDelegate
 
-  /**
-    * Creates a new edge and adds it to the internal source.
-    * @param start the start vertice
-    * @param relation the relation
-    * @param end the end vertice.
-    */
-  def add(start:Node, relation: Relation, end:Node):Unit = source.add(start, relation, end)
+  def add(start:Node, relation: Relation, end:Node):Unit = edgeDelegate.add(start, relation, end)
+  def remove(edge: Edge):Unit = edgeDelegate.remove(edge)
 
-  /**
-    * Remove the Edge bound by this this relation.
-    * @param relation the relation
-    */
-  def remove(relation: Relation):Unit = source.remove(relation)
+  def relation(rel:Relationship):Relation = relationDelegate.save(LazyRelation(relationDelegate.relationIdGenerator.generate(), rel))
+  def relation(rel: Relationship, data: String):DataRelation = relationDelegate.relation(rel, data)
+  def relation(rel:Relationship, data:Map[String, String]):HashRelation = relationDelegate.relation(rel, data)
+  def relation(rel:Relationship, data:Seq[String]):ListRelation = relationDelegate.relation(rel, data)
 
-  def relation(rel:Relationship):Relation = source.relation(rel)
-  def relation(rel: Relationship, data: String):DataRelation = source.relation(rel, data)
+  def node():Node = nodeDelegate.save(LazyNode(nodeDelegate.nodeIdGenerator.generate()))
+  def node(data: String):DataNode = nodeDelegate.node(data)
+  def node(data:Map[String, String]):HashNode = nodeDelegate.node(data)
+  def node(data:Seq[String]):ListNode = nodeDelegate.node(data)
 
-  def node():Node = source.node()
-  def node(data: String):DataNode = source.node(data)
+  def loadDataNode(id:VerticeId):DataNode = nodeDelegate.loadDataNode(id)
+  def loadHashNode(id:VerticeId):HashNode = nodeDelegate.loadHashNode(id)
+  def loadListNode(id:VerticeId):ListNode = nodeDelegate.loadListNode(id)
 
-  def loadDataNode(id:VerticeId):DataNode = source.loadDataNode(id)
-  def loadHashNode(id:VerticeId):HashNode = source.loadHashNode(id)
-  def loadListNode(id:VerticeId):ListNode = source.loadSeqNode(id)
-
-  def loadDataRelation(id:RelationId):DataRelation = source.loadDataRelation(id)
-  def loadHashRelation(id:RelationId):HashRelation = source.loadHashRelation(id)
-  def loadListRelation(id:RelationId):ListRelation = source.loadSeqRelation(id)
+  def loadDataRelation(id:RelationId):DataRelation = relationDelegate.loadDataRelation(id)
+  def loadHashRelation(id:RelationId):HashRelation = relationDelegate.loadHashRelation(id)
+  def loadListRelation(id:RelationId):ListRelation = relationDelegate.loadListRelation(id)
 }

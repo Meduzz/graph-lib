@@ -1,15 +1,15 @@
 package se.kodiak.tools.graphs
 
 import se.kodiak.tools.graphs.model._
-import scala.collection.immutable._
 
 object Graph {
-  def apply(source:GraphSource):Graph with Mutators = new GraphImpl(source)
+  def apply(edges:EdgeDelegate, nodes:NodeDelegate, relations:RelationDelegate):Graph with Mutators = new GraphImpl(edges, nodes, relations)
 }
 
 trait Graph {
   /**
    * Count the total number of relations of this vertice.
+ *
    * @param vertice the vertice.
    * @param direction specifies the direction to look
    * @return returns the count.
@@ -18,6 +18,7 @@ trait Graph {
 
   /**
    * Count the total number of relations of the supplied type of this vertice.
+ *
    * @param vertice the vertice.
    * @param rel the relationship type.
    * @param direction specifies the direction to look
@@ -27,6 +28,7 @@ trait Graph {
 
   /**
    * Get all outbound relations and their end vertice of this vertice..
+ *
    * @param vertice the source vertice.
    * @return returns a collection of tuples of the relation and the end vertice.
    */
@@ -34,6 +36,7 @@ trait Graph {
 
   /**
    * Get all outbound end vertice of this source vertice with the given relationship type.
+ *
    * @param vertice the source vertice.
    * @param rel the relationship type.
    * @return returns a collection of end vertices.
@@ -42,6 +45,7 @@ trait Graph {
 
   /**
     * Get all outbound relation + vertice that match the relationship filter.
+ *
     * @param vertice the source vertice.
     * @param rel the relationship filter.
     * @return returns a collection of relation, end vertice pairs.
@@ -50,6 +54,7 @@ trait Graph {
 
   /**
    * Get all source vertices and relations of this end vertice.
+ *
    * @param vertice the end vertice.
    * @return a collection of tuples of the source vertice and the relation.
    */
@@ -57,6 +62,7 @@ trait Graph {
 
   /**
    * Get all source vertices of this end vertice for the given relationship type.
+ *
    * @param vertice the end vertice.
    * @param rel the relationship type.
    * @return returns a collection of the source vertices.
@@ -65,6 +71,7 @@ trait Graph {
 
   /**
     * Get all inbound relation + vertice that match a relationship filter.
+ *
     * @param vertice the end vertice.
     * @param rel the relationship filter.
     * @return returns a collection of start vectice + relation pairs.
@@ -73,6 +80,7 @@ trait Graph {
 
   /**
    * Find all relations connecting these vertices specified by direction.
+ *
    * @param start the start vertice.
    * @param end the end vertice.
    * @param direction the direction.
@@ -82,6 +90,7 @@ trait Graph {
 
   /**
    * Finds the relations (if any) between these two vertice specified by the relationship type and direction.
+ *
    * @param start the start vertice.
    * @param end the end vertice.
    * @param rel the relationship type.
@@ -89,15 +98,32 @@ trait Graph {
    * @return returns a collection of relations.
    */
   def relation(start:Node, end:Node, rel:Relationship, direction:Direction):Seq[Relation]
+
+	/**
+		* Find edge that this relation binds together. For various reasons this can return several edges, but will most
+		* times only return one edge.
+		*
+		* @param relation the relation.
+		* @return returns the Edge.
+		*/
+	def edges(relation: Relation):Seq[Edge]
+
+	/**
+		* Find the edges that this node are part of.
+		*
+		* @param node the node
+		* @return retusn a list of edges that this node is part of.
+		*/
+	def edges(node:Node):Seq[Edge]
 }
 
-private class GraphImpl(val source:GraphSource) extends Graph with Mutators {
+private class GraphImpl(val edgeDelegate:EdgeDelegate, val nodeDelegate: NodeDelegate, val relationDelegate: RelationDelegate) extends Graph with Mutators {
 
-  private def start(vertice:Node, data:Seq[Edge] = source.edges):Seq[Edge] = {
+  private def start(vertice:Node, data:Seq[Edge] = edgeDelegate.edges):Seq[Edge] = {
     data.filter(_.start.id.equals(vertice.id))
   }
 
-  private def end(vertice:Node, data:Seq[Edge] = source.edges):Seq[Edge] = {
+  private def end(vertice:Node, data:Seq[Edge] = edgeDelegate.edges):Seq[Edge] = {
     data.filter(_.end.id.equals(vertice.id))
   }
 
@@ -198,4 +224,12 @@ private class GraphImpl(val source:GraphSource) extends Graph with Mutators {
 
     resultingEdges.map(_.relation).seq
   }
+
+	override def edges(relation: Relation):Seq[Edge] = {
+		edgeDelegate.edges.filter(e => e.relation.id.equals(relation.id))
+	}
+
+	override def edges(node: Node): Seq[Edge] = {
+		start(node) ++ end(node)
+	}
 }

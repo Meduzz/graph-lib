@@ -15,7 +15,7 @@ trait GraphSource {
 
   /**
     * Remove the Edge bound by this this relation.
- *
+    *
     * @param relation the relation
     */
   def remove(relation:Relation):Unit
@@ -23,12 +23,12 @@ trait GraphSource {
   def relation(rel:Relationship):Relation
   def relation(rel:Relationship, data: String):DataRelation
   def relation(rel:Relationship, data:Map[String, String]):HashRelation
-  def relationSeq(rel:Relationship):Relation
+  def relationSeq(rel:Relationship):ListRelation
 
   def node():Node
   def node(data: String):DataNode
   def node(data:Map[String, String]):HashNode
-  def nodeSeq():Node
+  def nodeSeq():ListNode
 
   def loadDataNode(id:VerticeId):DataNode
   def loadHashNode(id:VerticeId):HashNode

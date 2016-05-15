@@ -1,12 +1,12 @@
 package se.kodiak.tools.graphs
 
 import org.scalatest.FunSuite
-import model._
-import se.kodiak.tools.graphs.graphsources.InMemoryGraphSource
+import se.kodiak.tools.graphs.graphsources.InMemory._
+import se.kodiak.tools.graphs.model._
 
 class GraphTest extends FunSuite {
 
-  val graph = Graph(InMemoryGraphSource.build(Datasource.tupled(), Datasource.nodeIndex, Datasource.relationIndex))
+	val graph = InMemoryBuilder.fromData(Datasource.prebuilt()).build()
 
   test("graphs of the third degree") {
     assert(graph.degrees(Datasource.person1, Direction.BOTH) == 4)
