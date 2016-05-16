@@ -46,6 +46,8 @@ trait GraphNodeDSL {
 		graph.nodeDelegate.delete(node)
 	}
 
+	def save(implicit graph: Graph with Mutators):Node = graph.nodeDelegate.save(node)
+
   // load node data
   def asData(implicit graph:Graph with Mutators):DataNode = graph.loadDataNode(node.id)
   def asSeq(implicit graph:Graph with Mutators):ListNode = graph.loadListNode(node.id)
@@ -61,6 +63,8 @@ trait GraphRelationDSL {
 		graph.edges(relation).foreach(graph.remove)
     graph.relationDelegate.delete(relation)
   }
+
+	def save(implicit graph: Graph with Mutators):Relation = graph.relationDelegate.save(relation)
 
   // load relation data.
   def asData(implicit graph:Graph with Mutators):DataRelation = graph.loadDataRelation(relation.id)
