@@ -3,6 +3,7 @@ package se.kodiak.tools.graphs
 import se.kodiak.tools.graphs.model.{Edge, Node, Relation}
 
 import scala.collection.immutable
+import scala.concurrent.{ExecutionContext, Future}
 
 trait EdgeDelegate {
 
@@ -15,16 +16,15 @@ trait EdgeDelegate {
 		internalEdges.asInstanceOf[immutable.Seq[Edge]]
 	}
 
-	def add(start:Node, relation:Relation, end:Node):Edge = add(Edge(start, relation, end))
-	def add(edge:Edge):Edge = addLocal(save(edge))
+	def add(start:Node, relation:Relation, end:Node)(implicit ec:ExecutionContext):Future[Edge] = add(Edge(start, relation, end))
+	def add(edge:Edge)(implicit ec:ExecutionContext):Future[Edge] = save(edge).map(addLocal)
 
-	def remove(edge:Edge):Unit = {
-		delete(edge)
-		removeLocal(edge)
+	def remove(edge:Edge)(implicit ec:ExecutionContext):Future[Unit] = {
+		delete(edge).map(removeLocal)
 	}
 
-	def save(edge:Edge):Edge
-	def delete(edge:Edge):Unit
+	def save(edge:Edge):Future[Edge]
+	def delete(edge:Edge):Future[Edge]
 
 	def initialize():Seq[Edge]
 

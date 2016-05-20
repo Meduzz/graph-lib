@@ -1,10 +1,14 @@
 package se.kodiak.tools.graphs.graphsources
 
 import java.io.Serializable
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
 import se.kodiak.tools.graphs.model._
 import se.kodiak.tools.graphs._
+
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object InMemory {
 
@@ -58,49 +62,57 @@ object InMemory {
 		}
 	}
 
+	class UUIDGenerator extends IdGenerator {
+		override def generate():Serializable = UUID.randomUUID().toString
+	}
+
 	class InMemoryNodeDelegate(val nodeIdGenerator: IdGenerator, nodeses: Seq[Node]) extends NodeDelegate {
 
 		private var nodes: Map[Serializable, Node] = nodeses.map(nod => (nod.id, nod)).toMap
 
-		override def save[T <: Node](node: T): T = {
+		override def save[T <: Node](node: T):Future[T] = Future {
 			nodes = nodes ++ Map(node.id -> node)
 			node
 		}
 
-		override def loadDataNode(id: VerticeId): DataNode = nodes(id).asInstanceOf[DataNode]
+		override def loadDataNode(id: VerticeId):Future[DataNode] = Future(nodes(id).asInstanceOf[DataNode])
 
-		override def loadHashNode(id: VerticeId): HashNode = nodes(id).asInstanceOf[HashNode]
+		override def loadHashNode(id: VerticeId):Future[HashNode] = Future(nodes(id).asInstanceOf[HashNode])
 
-		override def loadListNode(id: VerticeId): ListNode = nodes(id).asInstanceOf[ListNode]
+		override def loadListNode(id: VerticeId):Future[ListNode] = Future(nodes(id).asInstanceOf[ListNode])
 
-		override def delete(node: Node): Unit = nodes = nodes.filterKeys(id => !id.equals(node.id))
-
+		override def delete(node: Node):Future[Unit] = {
+			nodes = nodes.filterKeys(id => !id.equals(node.id))
+			Future(Unit)
+		}
 	}
 
 	class InMemoryRelationDelegate(val relationIdGenerator: IdGenerator, rels: Seq[Relation]) extends RelationDelegate {
 
 		private var relations: Map[Serializable, Relation] = rels.map(rel => (rel.id, rel)).toMap
 
-		override def save[T <: Relation](relation: T): T = {
+		override def save[T <: Relation](relation: T):Future[T] = Future {
 			relations = relations ++ Map(relation.id -> relation)
 			relation
 		}
 
-		override def loadListRelation(id: RelationId): ListRelation = relations(id).asInstanceOf[ListRelation]
+		override def loadListRelation(id: RelationId):Future[ListRelation] = Future(relations(id).asInstanceOf[ListRelation])
 
-		override def loadDataRelation(id: RelationId): DataRelation = relations(id).asInstanceOf[DataRelation]
+		override def loadDataRelation(id: RelationId):Future[DataRelation] = Future(relations(id).asInstanceOf[DataRelation])
 
-		override def loadHashRelation(id: RelationId): HashRelation = relations(id).asInstanceOf[HashRelation]
+		override def loadHashRelation(id: RelationId):Future[HashRelation] = Future(relations(id).asInstanceOf[HashRelation])
 
-		override def delete(relation: Relation): Unit = relations = relations.filterKeys(id => !id.equals(relation.id))
-
+		override def delete(relation: Relation):Future[Unit] = {
+			relations = relations.filterKeys(id => !id.equals(relation.id))
+			Future(Unit)
+		}
 	}
 
 	class InMemoryEdgeDelegate(var e: Seq[Edge]) extends EdgeDelegate {
 
-		override def save(edge: Edge): Edge = edge
+		override def save(edge: Edge):Future[Edge] = Future(edge)
 
-		override def delete(edge: Edge): Unit = Unit
+		override def delete(edge: Edge):Future[Edge] = Future(edge)
 
 		override def initialize(): Seq[Edge] = e
 

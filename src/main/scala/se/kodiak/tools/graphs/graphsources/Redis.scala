@@ -39,7 +39,7 @@ object Redis {
 
 		val duration = Duration(3L, TimeUnit.SECONDS)
 
-		override def save[T <: Node](node: T): T = {
+		override def save[T <: Node](node: T):Future[T] = {
 			val maybe = node match {
 				case node:DataNode => saveDataNode(node)
 				case node:HashNode => saveHashNode(node)
@@ -47,40 +47,28 @@ object Redis {
 				case node:LazyNode => saveLazyNode(node)
 			}
 
-			val res = Await.result[Boolean](maybe, duration)
-
-			if (res) {
-				node
-			} else {
-				throw new RuntimeException("Saving node failed.")
-			}
+			maybe.map(bool => if (bool) { node } else { throw new RuntimeException("Saving node failed.") })
 		}
 
-		override def loadDataNode(id: VerticeId): DataNode = {
-			val futureNode = for {
+		override def loadDataNode(id: VerticeId):Future[DataNode] = {
+			for {
 				data <- redis.get[String](nodeKey(id))
 			} yield DataNode(id, data.getOrElse(""))
-
-			Await.result(futureNode, duration)
 		}
 
-		override def loadHashNode(id: VerticeId): HashNode = {
-			val futureNode = for {
+		override def loadHashNode(id: VerticeId):Future[HashNode] = {
+			for {
 				data <- redis.hgetall[String](nodeKey(id))
 			} yield HashNode(id, data)
-
-			Await.result(futureNode, duration)
 		}
 
-		override def loadListNode(id: VerticeId): ListNode = {
-			val futureNode = for {
+		override def loadListNode(id: VerticeId):Future[ListNode] = {
+			for {
 				data <- redis.smembers[String](nodeKey(id))
 			} yield ListNode(id, data)
-
-			Await.result(futureNode, duration)
 		}
 
-		override def delete(node: Node): Unit = redis.del(nodeKey(node.id))
+		override def delete(node: Node):Future[Unit] = redis.del(nodeKey(node.id)).map(_ => Unit)
 
 		def saveDataNode(node:DataNode):Future[Boolean] = {
 				redis.set(nodeKey(node.id), node.data)
@@ -107,7 +95,7 @@ object Redis {
 
 		val duration = Duration(3L, TimeUnit.SECONDS)
 
-		override def save[T <: Relation](relation: T): T = {
+		override def save[T <: Relation](relation: T):Future[T] = {
 			val maybe = relation match {
 				case rel:DataRelation => saveDataRelation(rel)
 				case rel:HashRelation => saveHashRelation(rel)
@@ -115,43 +103,31 @@ object Redis {
 				case rel:LazyRelation => saveLazyRelation(rel)
 			}
 
-			val result = Await.result(maybe, duration)
-
-			if (result) {
-				relation
-			} else {
-				throw new RuntimeException("Saving relatioin failed.")
-			}
+			maybe.map(bool => if (bool) { relation } else { throw new RuntimeException("Storing relation failed.") })
 		}
 
-		override def loadDataRelation(id: RelationId): DataRelation = {
-			val futureRelation = for {
+		override def loadDataRelation(id: RelationId):Future[DataRelation] = {
+			for {
 				rel <- redis.get[String](relationKey(id))
 				data <- redis.get[String](relationDataKey(id))
 			} yield DataRelation(id, rel.get, data.getOrElse(""))
-
-			Await.result(futureRelation, duration)
 		}
 
-		override def loadHashRelation(id: RelationId): HashRelation = {
-			val futureRelation = for {
+		override def loadHashRelation(id: RelationId):Future[HashRelation] = {
+			for {
 				rel <- redis.get[String](relationKey(id))
 				data <- redis.hgetall[String](relationDataKey(id))
 			} yield HashRelation(id, rel.get, data)
-
-			Await.result(futureRelation, duration)
 		}
 
-		override def loadListRelation(id: RelationId): ListRelation = {
-			val futureRelation = for {
+		override def loadListRelation(id: RelationId):Future[ListRelation] = {
+			for {
 				rel <- redis.get[String](relationKey(id))
 				data <- redis.smembers[String](relationDataKey(id))
 			} yield ListRelation(id, rel.get, data)
-
-			Await.result(futureRelation, duration)
 		}
 
-		override def delete(relation: Relation): Unit = redis.del(relationKey(relation.id))
+		override def delete(relation: Relation):Future[Unit] = redis.del(relationKey(relation.id)).map(_ => Unit)
 
 		def saveDataRelation(relation:DataRelation):Future[Boolean] = {
 			for {
@@ -187,9 +163,9 @@ object Redis {
 
 		val duration = Duration(3L, TimeUnit.SECONDS)
 
-		override def save(edge: Edge): Edge = {
+		override def save(edge: Edge):Future[Edge] = {
 			redis.sadd(indexKey, edgeToString(edge))
-			edge
+			  .map(_ => edge)
 		}
 
 		override def initialize(): Seq[Edge] = {
@@ -213,8 +189,9 @@ object Redis {
 			Await.result(futureEdges, duration)
 		}
 
-		override def delete(edge: Edge): Unit = {
+		override def delete(edge: Edge):Future[Edge] = {
 			redis.srem(indexKey, edgeToString(edge))
+			  .map(_ => edge)
 		}
 
 		def edgeToString(edge:Edge):String = {
