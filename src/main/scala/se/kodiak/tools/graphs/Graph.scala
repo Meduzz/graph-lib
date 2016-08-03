@@ -1,9 +1,10 @@
 package se.kodiak.tools.graphs
 
+import se.kodiak.tools.graphs.edge.EdgeStorage
 import se.kodiak.tools.graphs.model._
 
 object Graph {
-  def apply(edges:EdgeDelegate, nodes:NodeDelegate, relations:RelationDelegate):Graph with Mutators = new GraphImpl(edges, nodes, relations)
+  def apply(edges:EdgeStorage):Graph = new GraphImpl(edges)
 }
 
 trait Graph {
@@ -117,25 +118,25 @@ trait Graph {
 	def edges(node:Node):Seq[Edge]
 }
 
-private class GraphImpl(val edgeDelegate:EdgeDelegate, val nodeDelegate: NodeDelegate, val relationDelegate: RelationDelegate) extends Graph with Mutators {
+private class GraphImpl(val edges:EdgeStorage) extends Graph {
 
-  private def start(vertice:Node, data:Seq[Edge] = edgeDelegate.edges):Seq[Edge] = {
+  private def start(vertice:Node, data:Seq[Edge] = edges.edges):Seq[Edge] = {
     data.filter(_.start.id.equals(vertice.id))
   }
 
-  private def end(vertice:Node, data:Seq[Edge] = edgeDelegate.edges):Seq[Edge] = {
+  private def end(vertice:Node, data:Seq[Edge] = edges.edges):Seq[Edge] = {
     data.filter(_.end.id.equals(vertice.id))
   }
 
   override def degrees(vertice: Node, direction:Direction): Int = {
     val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(vertice)
-        val in = end(vertice)
-        out.union(in)
-      }
       case Direction.OUTBOUND => start(vertice)
       case Direction.INBOUND => end(vertice)
+			case _ => {
+				val out = start(vertice)
+				val in = end(vertice)
+				out.union(in)
+			}
     }
 
     resultingEdges.size
@@ -185,13 +186,13 @@ private class GraphImpl(val edgeDelegate:EdgeDelegate, val nodeDelegate: NodeDel
 
   override def relation(node1: Node, node2: Node, rel: Relationship, direction:Direction): Seq[Relation] = {
     val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(node1).filter(_.relation.relType.equals(rel))
-        val in = end(node2).filter(_.relation.relType.equals(rel))
-        out.union(in)
-      }
       case Direction.OUTBOUND => start(node1, end(node2)).filter(_.relation.relType.equals(rel))
       case Direction.INBOUND => end(node1, start(node2)).filter(_.relation.relType.equals(rel))
+			case _ => {
+				val out = start(node1).filter(_.relation.relType.equals(rel))
+				val in = end(node2).filter(_.relation.relType.equals(rel))
+				out.union(in)
+			}
     }
 
     resultingEdges.map(_.relation).seq
@@ -199,13 +200,13 @@ private class GraphImpl(val edgeDelegate:EdgeDelegate, val nodeDelegate: NodeDel
 
   override def degrees(vertice: Node, rel: Relationship, direction:Direction): Int = {
     val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(vertice).filter(_.relation.relType.equals(rel))
-        val in = end(vertice).filter(_.relation.relType.equals(rel))
-        out.intersect(in)
-      }
       case Direction.OUTBOUND => start(vertice).filter(_.relation.relType.equals(rel))
       case Direction.INBOUND => end(vertice).filter(_.relation.relType.equals(rel))
+			case _ => {
+				val out = start(vertice).filter(_.relation.relType.equals(rel))
+				val in = end(vertice).filter(_.relation.relType.equals(rel))
+				out.intersect(in)
+			}
     }
 
     resultingEdges.size
@@ -213,20 +214,20 @@ private class GraphImpl(val edgeDelegate:EdgeDelegate, val nodeDelegate: NodeDel
 
   override def relation(node1: Node, node2: Node, direction:Direction): Seq[Relation] = {
     val resultingEdges = direction match {
-      case Direction.BOTH => {
-        val out = start(node1)
-        val in = end(node2)
-        out.intersect(in)
-      }
       case Direction.OUTBOUND => start(node1, end(node2))
       case Direction.INBOUND => end(node1, start(node2))
+			case _ => {
+				val out = start(node1)
+				val in = end(node2)
+				out.intersect(in)
+			}
     }
 
     resultingEdges.map(_.relation).seq
   }
 
 	override def edges(relation: Relation):Seq[Edge] = {
-		edgeDelegate.edges.filter(e => e.relation.id.equals(relation.id))
+		edges.edges.filter(e => e.relation.id.equals(relation.id))
 	}
 
 	override def edges(node: Node): Seq[Edge] = {

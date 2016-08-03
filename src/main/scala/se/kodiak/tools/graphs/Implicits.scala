@@ -1,8 +1,7 @@
 package se.kodiak.tools.graphs
 
-import model._
-
-import scala.concurrent.{ExecutionContext, Future}
+import se.kodiak.tools.graphs.edge.EdgeStorage
+import se.kodiak.tools.graphs.model._
 
 object Implicits {
   implicit def nodeImplicits(node:Node):ImplicitNode = new ImplicitNode(node)
@@ -40,40 +39,21 @@ trait GraphNodeDSL {
   def findRelationsToNode(other:Node, rel:Relationship, direction: Direction)(implicit graph:Graph):Seq[Relation] = graph.relation(node, other, rel, direction)
 
   // create/remove relationships
-  def link(relation: Relation, end:Node)(implicit graph:Graph with Mutators, ec:ExecutionContext):Future[Node] = {
-		graph.add(node, relation, end).map(_ => node)
-	}
-  def link(rel:Relationship, end:Node)(implicit graph:Graph with Mutators, ec:ExecutionContext):Future[Node] = {
-		graph.relation(rel).map(r => graph.add(node, r, end)).map(_ => node)
+  def link(relation: Relation, end:Node)(implicit edges:EdgeStorage):Node = {
+		edges.add(node, relation, end)
+		node
 	}
 
-	def delete(implicit graph:Graph with Mutators, ec: ExecutionContext):Future[Unit] = {
-		graph.edges(node).foreach(graph.remove)
-		graph.nodeDelegate.delete(node)
-	}
-
-	def save(implicit graph: Graph with Mutators):Future[Node] = graph.nodeDelegate.save(node)
-
-  // load node data
-  def asData(implicit graph:Graph with Mutators):Future[DataNode] = graph.loadDataNode(node.id)
-  def asSeq(implicit graph:Graph with Mutators):Future[ListNode] = graph.loadListNode(node.id)
-	def asHash(implicit graph:Graph with Mutators):Future[HashNode] = graph.loadHashNode(node.id)
+  def delete()(implicit graph: Graph, edges: EdgeStorage):Unit = graph.edges(node).foreach(edges.delete)
 }
 
 trait GraphRelationDSL {
 
   def relation:Relation
 
-  // remove the edge bound by this relation.
-  def delete(implicit graph:Graph with Mutators, ec:ExecutionContext):Future[Unit] = {
-		graph.edges(relation).foreach(graph.remove)
-    graph.relationDelegate.delete(relation)
-  }
+	def start()(implicit graph: Graph):Seq[Node] = graph.edges(relation).map(_.start)
 
-	def save(implicit graph: Graph with Mutators):Future[Relation] = graph.relationDelegate.save(relation)
+	def end()(implicit graph: Graph):Seq[Node] = graph.edges(relation).map(_.end)
 
-  // load relation data.
-  def asData(implicit graph:Graph with Mutators):Future[DataRelation] = graph.loadDataRelation(relation.id)
-	def asSeq(implicit graph:Graph with Mutators):Future[ListRelation] = graph.loadListRelation(relation.id)
-	def asHash(implicit graph:Graph with Mutators):Future[HashRelation] = graph.loadHashRelation(relation.id)
+  def delete()(implicit graph: Graph, edges: EdgeStorage):Unit = graph.edges(relation).foreach(edges.delete)
 }
