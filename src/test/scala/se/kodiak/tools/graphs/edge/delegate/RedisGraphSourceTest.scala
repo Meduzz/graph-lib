@@ -72,7 +72,10 @@ class RedisGraphSourceTest extends FunSuite with BeforeAndAfterAll with ScalaFut
 		edges.add(first, relation, second)
 	}
 
-  override protected def afterAll(): Unit = {
-    redis.flushall()
-  }
+	override protected def afterAll() = {
+		super.afterAll()
+		redis.flushall()
+		redis.quit()
+		system.shutdown()
+	}
 }
