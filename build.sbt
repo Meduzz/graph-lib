@@ -1,6 +1,6 @@
 name := "Graph"
 
-version := "20161228"
+version := "20170528"
 
 scalaVersion := "2.11.7"
 

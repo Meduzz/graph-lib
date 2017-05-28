@@ -20,7 +20,7 @@ class GraphTest extends FunSuite {
 
     assert(outgoing.size == 2)
     outgoing.foreach(rels => {
-      assert(Seq(Datasource.knows4, Datasource.owns2).contains(rels._1))
+      assert(Seq(Datasource.knows, Datasource.owns).contains(rels._1))
       assert(Seq(Datasource.person1, Datasource.gadget2).contains(rels._2))
     })
   }

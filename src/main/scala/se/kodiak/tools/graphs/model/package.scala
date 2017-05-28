@@ -11,13 +11,12 @@ package object model {
   }
 
   sealed trait Relation {
-    def id: RelationId
     def relType: Relationship
   }
-  case class LazyRelation(id:RelationId, relType:Relationship) extends Relation
+  case class LazyRelation(relType:Relationship) extends Relation
 
   object Relation {
-    def apply(id:RelationId, relType:Relationship):Relation = LazyRelation(id, relType)
+    def apply(relType:Relationship):Relation = LazyRelation(relType)
   }
 
   case class Edge(start:Node, relation:Relation, end:Node)

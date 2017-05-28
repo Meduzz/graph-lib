@@ -13,7 +13,7 @@ class ImplicitsTest extends FunSuite with ScalaFutures {
   implicit val graph:Graph = Graph(edges)
 
   test("let there be mutators") {
-    val link = Datasource.person2.link(Relation("7", Datasource.Rel.KNOWS), Datasource.person3)
+    val link = Datasource.person2.link(Relation(Datasource.Rel.KNOWS), Datasource.person3)
 		val knows = Datasource.person2.endNodesOfRelationType(Datasource.Rel.KNOWS)(graph)
 
 		assert(knows.size == 2)
@@ -24,7 +24,7 @@ class ImplicitsTest extends FunSuite with ScalaFutures {
   test("playing around with implicit explicits") {
     Datasource.gadget2.findRelationsToNode(Datasource.person3, Direction.INBOUND).foreach(_.delete)
     assert(Datasource.person3.degreesOfRelationType(Datasource.Rel.OWNS, Direction.OUTBOUND) == 0)
-    Datasource.person1.link(Relation("8", Datasource.Rel.OWNS), Datasource.gadget2)
+    Datasource.person1.link(Relation(Datasource.Rel.OWNS), Datasource.gadget2)
     assert(Datasource.person1.degreesOfRelationType(Datasource.Rel.OWNS, Direction.OUTBOUND) == 1)
   }
 
@@ -37,7 +37,7 @@ class ImplicitsTest extends FunSuite with ScalaFutures {
 
   test("lazy creation of graphs") {
 		val rel = "LOVES"
-		val relation = Relation("10", rel)
+		val relation = Relation(rel)
 
 		Datasource.person3.link(relation, Datasource.person2)
 

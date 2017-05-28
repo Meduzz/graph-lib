@@ -9,91 +9,91 @@ object Graph {
 
 trait Graph {
   /**
-   * Count the total number of relations of this vertice.
+   * Count the total number of relations of this node.
  *
-   * @param vertice the vertice.
+   * @param node the node.
    * @param direction specifies the direction to look
    * @return returns the count.
    */
-  def degrees(vertice:Node, direction:Direction):Int
+  def degrees(node:Node, direction:Direction):Int
 
   /**
-   * Count the total number of relations of the supplied type of this vertice.
+   * Count the total number of relations of the supplied type of this node.
  *
-   * @param vertice the vertice.
+   * @param node the node.
    * @param rel the relationship type.
    * @param direction specifies the direction to look
    * @return returns the count.
    */
-  def degrees(vertice:Node, rel:Relationship, direction:Direction):Int
+  def degrees(node:Node, rel:Relationship, direction:Direction):Int
 
   /**
-   * Get all outbound relations and their end vertice of this vertice..
+   * Get all outbound relations and their end node of this node..
  *
-   * @param vertice the source vertice.
-   * @return returns a collection of tuples of the relation and the end vertice.
+   * @param startNode the source node.
+   * @return returns a collection of tuples of the relation and the end node.
    */
-  def outbound(vertice:Node):Seq[(Relation, Node)]
+  def outbound(startNode:Node):Seq[(Relation, Node)]
 
   /**
-   * Get all outbound end vertice of this source vertice with the given relationship type.
+   * Get all outbound end node of this source node with the given relationship type.
  *
-   * @param vertice the source vertice.
+   * @param startNode the source node.
    * @param rel the relationship type.
    * @return returns a collection of end vertices.
    */
-  def outbound(vertice:Node, rel:Relationship):Seq[Node]
+  def outbound(startNode:Node, rel:Relationship):Seq[Node]
 
   /**
-    * Get all outbound relation + vertice that match the relationship filter.
+    * Get all outbound relation + node that match the relationship filter.
  *
-    * @param vertice the source vertice.
+    * @param startNode the source node.
     * @param rel the relationship filter.
-    * @return returns a collection of relation, end vertice pairs.
+    * @return returns a collection of relation, end node pairs.
     */
-  def outboundWithRelation(vertice:Node, rel:Relationship):Seq[(Relation, Node)]
+  def outboundWithRelation(startNode:Node, rel:Relationship):Seq[(Relation, Node)]
 
   /**
-   * Get all source vertices and relations of this end vertice.
+   * Get all source vertices and relations of this end node.
  *
-   * @param vertice the end vertice.
-   * @return a collection of tuples of the source vertice and the relation.
+   * @param endNode the end node.
+   * @return a collection of tuples of the source node and the relation.
    */
-  def inbound(vertice:Node):Seq[(Node, Relation)]
+  def inbound(endNode:Node):Seq[(Node, Relation)]
 
   /**
-   * Get all source vertices of this end vertice for the given relationship type.
+   * Get all source vertices of this end node for the given relationship type.
  *
-   * @param vertice the end vertice.
+   * @param endNode the end node.
    * @param rel the relationship type.
    * @return returns a collection of the source vertices.
    */
-  def inbound(vertice:Node, rel:Relationship):Seq[Node]
+  def inbound(endNode:Node, rel:Relationship):Seq[Node]
 
   /**
-    * Get all inbound relation + vertice that match a relationship filter.
+    * Get all inbound relation + node that match a relationship filter.
  *
-    * @param vertice the end vertice.
+    * @param endNode the end node.
     * @param rel the relationship filter.
     * @return returns a collection of start vectice + relation pairs.
     */
-  def inboundWithRelation(vertice:Node, rel:Relationship):Seq[(Node, Relation)]
+  def inboundWithRelation(endNode:Node, rel:Relationship):Seq[(Node, Relation)]
 
   /**
    * Find all relations connecting these vertices specified by direction.
  *
-   * @param start the start vertice.
-   * @param end the end vertice.
+   * @param start the start node.
+   * @param end the end node.
    * @param direction the direction.
    * @return returns a collection with all relations.
    */
   def relation(start:Node, end:Node, direction:Direction):Seq[Relation]
 
   /**
-   * Finds the relations (if any) between these two vertice specified by the relationship type and direction.
+   * Finds the relations (if any) between these two node specified by the relationship type and direction.
  *
-   * @param start the start vertice.
-   * @param end the end vertice.
+   * @param start the start node.
+   * @param end the end node.
    * @param rel the relationship type.
    * @param direction the direction.
    * @return returns a collection of relations.
@@ -120,21 +120,21 @@ trait Graph {
 
 private class GraphImpl(val edges:EdgeStorage) extends Graph {
 
-  private def start(vertice:Node, data:Seq[Edge] = edges.edges):Seq[Edge] = {
-    data.filter(_.start.id.equals(vertice.id))
+  private def start(startNode:Node, data:Seq[Edge] = edges.edges):Seq[Edge] = {
+    data.filter(_.start.id.equals(startNode.id))
   }
 
-  private def end(vertice:Node, data:Seq[Edge] = edges.edges):Seq[Edge] = {
-    data.filter(_.end.id.equals(vertice.id))
+  private def end(endNode:Node, data:Seq[Edge] = edges.edges):Seq[Edge] = {
+    data.filter(_.end.id.equals(endNode.id))
   }
 
-  override def degrees(vertice: Node, direction:Direction): Int = {
+  override def degrees(node: Node, direction:Direction): Int = {
     val resultingEdges = direction match {
-      case Direction.OUTBOUND => start(vertice)
-      case Direction.INBOUND => end(vertice)
+      case Direction.OUTBOUND => start(node)
+      case Direction.INBOUND => end(node)
 			case _ => {
-				val out = start(vertice)
-				val in = end(vertice)
+				val out = start(node)
+				val in = end(node)
 				out.union(in)
 			}
     }
@@ -142,55 +142,55 @@ private class GraphImpl(val edges:EdgeStorage) extends Graph {
     resultingEdges.size
   }
 
-  override def inbound(vertice: Node): Seq[(Node, Relation)] = {
-    end(vertice)
+  override def inbound(startNode: Node): Seq[(Node, Relation)] = {
+    end(startNode)
       .map { edge =>
         (edge.start, edge.relation)
       }.seq
   }
 
-  override def inbound(vertice: Node, rel: Relationship): Seq[Node] = {
-    end(vertice)
+  override def inbound(endNode: Node, rel: Relationship): Seq[Node] = {
+    end(endNode)
       .filter(_.relation.relType.equals(rel))
       .map(_.start)
       .seq
   }
 
-  override def inboundWithRelation(vertice: Node, rel: Relationship): Seq[(Node, Relation)] = {
-    end(vertice)
+  override def inboundWithRelation(endNode: Node, rel: Relationship): Seq[(Node, Relation)] = {
+    end(endNode)
       .filter(_.relation.relType.equals(rel))
       .map(edge => (edge.start, edge.relation))
       .seq
   }
 
-  override def outbound(vertice: Node): Seq[(Relation, Node)] = {
-    start(vertice)
+  override def outbound(startNode: Node): Seq[(Relation, Node)] = {
+    start(startNode)
       .map { edge =>
         (edge.relation, edge.end)
       }.seq
   }
 
-  override def outbound(vertice: Node, rel: Relationship): Seq[Node] = {
-    start(vertice)
+  override def outbound(startNode: Node, rel: Relationship): Seq[Node] = {
+    start(startNode)
       .filter(_.relation.relType.equals(rel))
       .map(_.end)
       .seq
   }
 
-  override def outboundWithRelation(vertice: Node, rel: Relationship): Seq[(Relation, Node)] = {
-    start(vertice)
+  override def outboundWithRelation(startNode: Node, rel: Relationship): Seq[(Relation, Node)] = {
+    start(startNode)
       .filter(_.relation.relType.equals(rel))
       .map(edge => (edge.relation, edge.end))
       .seq
   }
 
-  override def relation(node1: Node, node2: Node, rel: Relationship, direction:Direction): Seq[Relation] = {
+  override def relation(firstNode: Node, secondNode: Node, rel: Relationship, direction:Direction): Seq[Relation] = {
     val resultingEdges = direction match {
-      case Direction.OUTBOUND => start(node1, end(node2)).filter(_.relation.relType.equals(rel))
-      case Direction.INBOUND => end(node1, start(node2)).filter(_.relation.relType.equals(rel))
+      case Direction.OUTBOUND => start(firstNode, end(secondNode)).filter(_.relation.relType.equals(rel))
+      case Direction.INBOUND => end(firstNode, start(secondNode)).filter(_.relation.relType.equals(rel))
 			case _ => {
-				val out = start(node1).filter(_.relation.relType.equals(rel))
-				val in = end(node2).filter(_.relation.relType.equals(rel))
+				val out = start(firstNode).filter(_.relation.relType.equals(rel))
+				val in = end(secondNode).filter(_.relation.relType.equals(rel))
 				out.union(in)
 			}
     }
@@ -198,13 +198,13 @@ private class GraphImpl(val edges:EdgeStorage) extends Graph {
     resultingEdges.map(_.relation).seq
   }
 
-  override def degrees(vertice: Node, rel: Relationship, direction:Direction): Int = {
+  override def degrees(node: Node, rel: Relationship, direction:Direction): Int = {
     val resultingEdges = direction match {
-      case Direction.OUTBOUND => start(vertice).filter(_.relation.relType.equals(rel))
-      case Direction.INBOUND => end(vertice).filter(_.relation.relType.equals(rel))
+      case Direction.OUTBOUND => start(node).filter(_.relation.relType.equals(rel))
+      case Direction.INBOUND => end(node).filter(_.relation.relType.equals(rel))
 			case _ => {
-				val out = start(vertice).filter(_.relation.relType.equals(rel))
-				val in = end(vertice).filter(_.relation.relType.equals(rel))
+				val out = start(node).filter(_.relation.relType.equals(rel))
+				val in = end(node).filter(_.relation.relType.equals(rel))
 				out.intersect(in)
 			}
     }
@@ -212,13 +212,13 @@ private class GraphImpl(val edges:EdgeStorage) extends Graph {
     resultingEdges.size
   }
 
-  override def relation(node1: Node, node2: Node, direction:Direction): Seq[Relation] = {
+  override def relation(firstNode: Node, secondNode: Node, direction:Direction): Seq[Relation] = {
     val resultingEdges = direction match {
-      case Direction.OUTBOUND => start(node1, end(node2))
-      case Direction.INBOUND => end(node1, start(node2))
+      case Direction.OUTBOUND => start(firstNode, end(secondNode))
+      case Direction.INBOUND => end(firstNode, start(secondNode))
 			case _ => {
-				val out = start(node1)
-				val in = end(node2)
+				val out = start(firstNode)
+				val in = end(secondNode)
 				out.intersect(in)
 			}
     }
@@ -227,7 +227,7 @@ private class GraphImpl(val edges:EdgeStorage) extends Graph {
   }
 
 	override def edges(relation: Relation):Seq[Edge] = {
-		edges.edges.filter(e => e.relation.id.equals(relation.id))
+		edges.edges.filter(e => e.relation.relType.equals(relation.relType))
 	}
 
 	override def edges(node: Node): Seq[Edge] = {
