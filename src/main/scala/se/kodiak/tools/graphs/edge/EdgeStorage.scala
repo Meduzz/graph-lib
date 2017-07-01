@@ -38,6 +38,8 @@ class EdgeStorage(delegate:EdgeStorageDelegate) {
 
 		edge
 	}
+
+	def close():Unit = delegate.close()
 }
 
 trait EdgeStorageDelegate {
@@ -46,5 +48,7 @@ trait EdgeStorageDelegate {
 	def onDelete(edge:Edge):Boolean
 
 	def initialize():Seq[Edge]
+
+	def close():Unit
 
 }

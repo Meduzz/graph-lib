@@ -15,4 +15,5 @@ class InMemoryStorageDelegate(val edges:Seq[Edge]) extends EdgeStorageDelegate {
 
 	override def initialize():Seq[Edge] = edges
 
+	override def close() = Unit
 }

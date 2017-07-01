@@ -1,6 +1,6 @@
 name := "Graph"
 
-version := "20170528"
+version := "20170701"
 
 scalaVersion := "2.11.7"
 
@@ -12,4 +12,4 @@ publishTo := Some("se.kodiak.tools" at "http://yamr.kodiak.se/maven")
 
 publishArtifact in (Compile, packageDoc) := false
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.0" % "test"
